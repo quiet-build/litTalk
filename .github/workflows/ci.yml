@@ -36,7 +36,16 @@ jobs:
         run: pnpm run lint:lit-analyzer
 
       - name: Install Playwright Chromium
-        run: node "$(node -e "console.log(require.resolve('playwright-core/cli.js'))")" install --with-deps chromium
+        run: |
+          # Resolve the CLI from the same Playwright dependency as the test runner.
+          node <<'NODE'
+          const {createRequire} = require('node:module');
+          const {dirname, join} = require('node:path');
+          const {execFileSync} = require('node:child_process');
+          const runnerRequire = createRequire(require.resolve('@web/test-runner-playwright'));
+          const cli = join(dirname(runnerRequire.resolve('playwright/package.json')), 'cli.js');
+          execFileSync(process.execPath, [cli, 'install', '--with-deps', 'chromium'], {stdio: 'inherit'});
+          NODE
 
       - name: Run tests with coverage
         run: pnpm test

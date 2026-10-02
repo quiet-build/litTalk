@@ -51,3 +51,7 @@ deployment config.
   output and should only be edited intentionally.
 - `test/` contains browser-level unit tests for the element, child components,
   API helpers, and constants.
+
+CI installs Chromium using the Playwright CLI resolved from
+`@web/test-runner-playwright`, so installation and execution use the same
+browser revision even when pnpm resolves multiple Playwright versions.
