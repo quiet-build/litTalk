@@ -55,3 +55,10 @@ deployment config.
 CI installs Chromium using the Playwright CLI resolved from
 `@web/test-runner-playwright`, so installation and execution use the same
 browser revision even when pnpm resolves multiple Playwright versions.
+
+`.github/workflows/ci.yml` checks pushes and pull requests to `main`.
+`.github/workflows/deploy-worker.yml` deploys only when a push to `main`
+changes `worker/**`, or when explicitly dispatched by an authorized maintainer.
+It still requires the configured Cloudflare CI credentials and the existing
+Worker's OAuth secret. Workflow or documentation changes alone do not trigger
+an OAuth proxy deployment.

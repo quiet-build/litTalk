@@ -5,7 +5,7 @@ name: Deploy Worker
 # `wrangler secret put` and persists across deploys — it is NOT managed here.
 on:
   push:
-    branches: [develop]
+    branches: [main]
     paths: ['worker/**']
   workflow_dispatch:
 
