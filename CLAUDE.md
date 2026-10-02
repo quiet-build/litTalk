@@ -70,11 +70,10 @@ implicitly via `pnpm run docs`). It is git-ignored — do not commit it.
 `<lit-talk>` reads `?code=...&state=...` on connect → verifies the `state`
 against `sessionStorage` (**fail closed**: missing OR mismatched aborts) →
 POSTs `{ code, client_id }` to the consumer's `proxy` → expects
-`{ access_token }` back → stores it in `localStorage` and emits
-`TOKEN_READY` → loads `/user`, looks up the issue by labels
+`{ access_token }` back → stores it in `localStorage` and directly loads `/user`, looks up the issue by labels
 `[label, postUniqueId]`, creates one if missing (with `response.ok` +
 payload-shape validation), then fetches comments. New comments post via
-`<comment-box>` and trigger `COMMENT_ADDED` to refresh the list.
+`<comment-box>` and trigger `comment-added` to refresh the list.
 
 ## Security invariants — do not break
 
@@ -123,12 +122,13 @@ Publishing is automated via `.github/workflows/publish.yml`:
 1. Bump `version` in `package.json` and commit.
 2. Create a GitHub **Release** with tag `vX.Y.Z` (must match the package.json
    version exactly — the workflow's version-check step fails otherwise).
-3. The workflow runs tests (gated at 100% coverage), executes `prepublishOnly`
-   (clean → tsc → rollup), and publishes to npm with **provenance**
-   attestations (sigstore via GitHub OIDC).
+3. The workflow builds (clean → tsc → rollup) and publishes with
+   `--ignore-scripts` using npm Trusted Publishing and GitHub OIDC provenance.
+   Browser tests are currently commented out in the publish workflow; the
+   main-branch CI below owns the test/coverage gate.
 
-Requires the `NPM_TOKEN` repository secret — a Granular Access Token with
-"Read and write" permission on the `lit-talk` package.
+Requires the npm Trusted Publisher configuration for this repository and
+`publish.yml`; the current workflow does not use an `NPM_TOKEN` secret.
 
 `.github/workflows/ci.yml` runs on every push/PR to `main`: typecheck,
 lit-analyzer, tests, coverage artifact upload.
@@ -136,8 +136,15 @@ lit-analyzer, tests, coverage artifact upload.
 ## Known issues / follow-ups
 
 - **ESLint v9 config migration**: `.eslintrc.json` is no longer read; needs an
-  `eslint.config.js`. The `lint:eslint` script fails.
-- **No tests** in `src/` despite `@web/test-runner` (`wtr`) being configured.
+  `eslint.config.js`. The `lint:eslint` script fails. The 2026-10-02 check also
+  found a rule API incompatibility: installed TypeScript ESLint plugin 5.62.0
+  supports ESLint 6–8; even legacy-config mode fails on `context.getScope`.
+  `@eslint/compat` is not installed. Converting config syntax alone is insufficient;
+  retain the existing rules until compatible tooling is available.
+- **Browser tests live in `test/`**, not `src/`: API helpers, constants,
+  comment-box, comment-list and the parent element are covered by five files.
+  `web-test-runner.config.js` configures Chromium and 100% coverage thresholds;
+  configured thresholds alone do not prove the suite passed.
 - **Access token in `localStorage`** — XSS-readable. Acceptable trade-off
   given the framework-agnostic scope; a backend session would require shape
   the consumer hasn't opted into.

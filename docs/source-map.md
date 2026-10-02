@@ -42,6 +42,9 @@ deployment config.
 - `package.json` scripts drive package build, test, analyzer, docs, and release
   flows. `pnpm run build` is the strict TypeScript gate.
 - `rollup.config.js` produces the browser bundle used by docs and publishing.
+- `pnpm run checksize` first builds current TypeScript and the configured
+  `lit-talk.bundle.js`, then prints its gzip byte count using Node's standard
+  library. Build/read/compression failures fail the command; the bundle is kept.
 - `web-test-runner.config.js` configures browser tests under `test/`.
 - `web-dev-server.config.js` serves local examples and docs.
 - `docs-src/` is the Eleventy source for generated docs; `docs/` is generated
